@@ -1,5 +1,5 @@
 {
-  "name": "particle_simulation",
+  "name": "interactive-particle-simulation",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,6 +12,6 @@
     "vite": "^4.4.5"
   },
   "dependencies": {
-    "three": "^0.165.0"
+    "three": "^0.166.1"
   }
 }
