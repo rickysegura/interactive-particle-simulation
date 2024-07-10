@@ -57,7 +57,7 @@ function initAudio() {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     
     // Load the audio file
-    fetch('./overthinker.mp3')
+    fetch('./musicFile.mp3') // REPLACES MUSIC FILE PATH TO YOUR AUDIO
         .then(response => response.arrayBuffer())
         .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
         .then(decodedAudio => {
