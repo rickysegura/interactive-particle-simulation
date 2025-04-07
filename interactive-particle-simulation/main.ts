@@ -40,7 +40,7 @@ overlay.style.color = 'skyblue';
 overlay.style.fontFamily = 'Arial, sans-serif';
 overlay.style.fontSize = '14px';
 overlay.style.textShadow = '1px 1px 2px black';
-overlay.innerHTML = 'Created by <a href="https://x.com/rickysegura_">Ricky Segura</a> with <i class="fa-solid fa-heart fa-beat-fade"></i> in Los Angeles, CA';
+overlay.innerHTML = 'Created with <i class="fa-solid fa-heart fa-beat-fade"></i> and Three.js';
 document.body.appendChild(overlay);
 
 const scene: THREE.Scene = new THREE.Scene();
