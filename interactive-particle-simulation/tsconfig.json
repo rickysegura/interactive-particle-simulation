@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
       "target": "es6",
+      "outDir": "./dist",
       "lib": ["dom", "dom.iterable", "esnext"],
       "allowJs": true,
       "skipLibCheck": true,
@@ -13,8 +14,10 @@
       "resolveJsonModule": true,
       "isolatedModules": true,
       "jsx": "preserve",
-      "incremental": true
+      "incremental": true,
+      "sourceMap": false,
+      "removeComments": true
     },
     "include": ["**/*.ts", "**/*.tsx"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules", "dist"]
 }

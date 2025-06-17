@@ -53,18 +53,6 @@ overlay.style.letterSpacing = '1px';
 overlay.innerHTML = '◉ QUANTUM PARTICLE NEXUS ◉<br>Enhanced with ♦ THREE.JS<br>Built by <a href="https://www.rickysegura.dev/" target="_blank">Ricky Segura</a>';
 document.body.appendChild(overlay);
 
-// Performance monitor
-const perfMonitor: HTMLDivElement = document.createElement('div');
-perfMonitor.style.position = 'absolute';
-perfMonitor.style.top = '20px';
-perfMonitor.style.left = '20px';
-perfMonitor.style.color = '#ff6b6b';
-perfMonitor.style.fontFamily = '"Orbitron", monospace';
-perfMonitor.style.fontSize = '12px';
-perfMonitor.style.textShadow = '0 0 10px #ff6b6b';
-perfMonitor.style.opacity = '0.8';
-document.body.appendChild(perfMonitor);
-
 // Enhanced Three.js setup
 const scene: THREE.Scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x0a0a1a, 0.01); // Add atmospheric fog
@@ -83,7 +71,7 @@ document.body.appendChild(renderer.domElement);
 // Enhanced controls container with glassmorphism
 const controlsContainer: HTMLDivElement = document.createElement('div');
 controlsContainer.style.position = 'absolute';
-controlsContainer.style.top = '40px';
+controlsContainer.style.top = '20px';
 controlsContainer.style.right = '20px';
 controlsContainer.style.background = 'linear-gradient(145deg, rgba(0,255,136,0.1), rgba(255,0,136,0.1))';
 controlsContainer.style.backdropFilter = 'blur(15px)';
@@ -266,35 +254,18 @@ window.addEventListener('click', () => {
 
 const raycaster: THREE.Raycaster = new THREE.Raycaster();
 
-// Performance tracking
-let frameCount: number = 0;
-let lastTime: number = performance.now();
-
 // Enhanced animation function with multiple visual effects
 function animate(): void {
     requestAnimationFrame(animate);
     
     time += dt;
-    const currentTime = performance.now();
-    
-    // Update performance monitor
-    frameCount++;
-    if (currentTime - lastTime > 1000) {
-        const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
-        perfMonitor.innerHTML = `FPS: ${fps} | Particles: ${particleCount.toLocaleString()}`;
-        frameCount = 0;
-        lastTime = currentTime;
-    }
 
-    const positions = particles.attributes.position.array as Float32Array;
-    const colors = particles.attributes.color.array as Float32Array;
+    const positionsArray = particles.attributes.position.array as Float32Array;
+    const colorsArray = particles.attributes.color.array as Float32Array;
 
     raycaster.setFromCamera(mouse, camera);
     const mouseIntersectPoint: THREE.Vector3 = new THREE.Vector3();
     raycaster.ray.at(camera.position.z, mouseIntersectPoint);
-
-    let particlesInOrbit: number = 0;
-    let totalEnergy: number = 0;
 
     // Gradually reduce mouse influence strength
     mouseInfluenceStrength = Math.max(0.5, mouseInfluenceStrength * 0.98);
@@ -302,9 +273,9 @@ function animate(): void {
     // Enhanced particle physics and visual effects
     for (let i = 0; i < particleCount; i++) {
         const index = i * 3;
-        let x = positions[index];
-        let y = positions[index + 1];
-        let z = positions[index + 2];
+        const x = positionsArray[index];
+        const y = positionsArray[index + 1];
+        const z = positionsArray[index + 2];
 
         // Add wave distortion based on original positions
         const waveOffset = Math.sin(time * 2 + originalPositions[index] * 0.5) * waveAmplitude * 0.1;
@@ -315,8 +286,6 @@ function animate(): void {
         const distance: number = distanceVector.length();
 
         if (distance < mouseInfluenceRadius && distance > 0.1) {
-            particlesInOrbit++;
-
             // Enhanced gravitational force with mouse influence strength
             const force: number = (G * mouseInfluenceStrength) / (distance * distance + 0.1);
             const acceleration: number = force * dt;
@@ -337,8 +306,6 @@ function animate(): void {
                 velocities[index+2]**2
             );
             
-            totalEnergy += speed;
-            
             // Multi-layered color system
             const speedIntensity: number = Math.min(speed / escapeVelocity, 1);
             const distanceIntensity: number = 1 - (distance / mouseInfluenceRadius);
@@ -351,9 +318,9 @@ function animate(): void {
                 0.4 + speedIntensity * 0.6
             );
             
-            colors[index] = baseColor.r * (1 + speedIntensity);
-            colors[index + 1] = baseColor.g * (1 + distanceIntensity);
-            colors[index + 2] = baseColor.b * (1 + speedIntensity * distanceIntensity);
+            colorsArray[index] = baseColor.r * (1 + speedIntensity);
+            colorsArray[index + 1] = baseColor.g * (1 + distanceIntensity);
+            colorsArray[index + 2] = baseColor.b * (1 + speedIntensity * distanceIntensity);
             
         } else {
             // Enhanced ambient behavior for particles outside influence
@@ -361,9 +328,9 @@ function animate(): void {
             const ambientColor = new THREE.Color().setHSL(ambientHue, 0.4, 0.3);
             
             // Gradual color transition with trail effect
-            colors[index] = colors[index] * trailEffect + ambientColor.r * (1 - trailEffect);
-            colors[index + 1] = colors[index + 1] * trailEffect + ambientColor.g * (1 - trailEffect);
-            colors[index + 2] = colors[index + 2] * trailEffect + ambientColor.b * (1 - trailEffect);
+            colorsArray[index] = colorsArray[index] * trailEffect + ambientColor.r * (1 - trailEffect);
+            colorsArray[index + 1] = colorsArray[index + 1] * trailEffect + ambientColor.g * (1 - trailEffect);
+            colorsArray[index + 2] = colorsArray[index + 2] * trailEffect + ambientColor.b * (1 - trailEffect);
             
             // Add subtle drift based on original position
             const drift = Math.sin(time * 0.5 + originalPositions[index] * 0.1) * 0.001;
@@ -377,12 +344,12 @@ function animate(): void {
         const index = i * 3;
 
         // Apply velocity with enhanced integration
-        positions[index] += velocities[index] * dt * 60; // Frame-rate independent
-        positions[index + 1] += velocities[index + 1] * dt * 60;
-        positions[index + 2] += velocities[index + 2] * dt * 60;
+        positionsArray[index] += velocities[index] * dt * 60; // Frame-rate independent
+        positionsArray[index + 1] += velocities[index + 1] * dt * 60;
+        positionsArray[index + 2] += velocities[index + 2] * dt * 60;
 
         // Enhanced damping based on distance from center
-        const centerDist = Math.sqrt(positions[index]**2 + positions[index+1]**2 + positions[index+2]**2);
+        const centerDist = Math.sqrt(positionsArray[index]**2 + positionsArray[index+1]**2 + positionsArray[index+2]**2);
         const adaptiveDamping = damping + (1 - damping) * Math.min(centerDist / maxDistance, 0.5);
         
         velocities[index] *= adaptiveDamping;
@@ -392,9 +359,9 @@ function animate(): void {
         // Soft boundary constraints with elastic collision
         if (centerDist > maxDistance) {
             const scale: number = maxDistance / centerDist;
-            positions[index] *= scale * 0.95;
-            positions[index + 1] *= scale * 0.95;
-            positions[index + 2] *= scale * 0.95;
+            positionsArray[index] *= scale * 0.95;
+            positionsArray[index + 1] *= scale * 0.95;
+            positionsArray[index + 2] *= scale * 0.95;
             
             // Add some bounce-back velocity
             velocities[index] *= -0.3;
@@ -433,14 +400,16 @@ window.addEventListener('resize', onWindowResize, false);
 
 // Add keyboard shortcuts for enhanced interaction
 window.addEventListener('keydown', (event: KeyboardEvent) => {
+    const positionsArray = particles.attributes.position.array as Float32Array;
+    
     switch(event.code) {
         case 'Space':
             // Reset particles to original positions
             for (let i = 0; i < particleCount; i++) {
                 const index = i * 3;
-                positions[index] = originalPositions[index];
-                positions[index + 1] = originalPositions[index + 1];
-                positions[index + 2] = originalPositions[index + 2];
+                positionsArray[index] = originalPositions[index];
+                positionsArray[index + 1] = originalPositions[index + 1];
+                positionsArray[index + 2] = originalPositions[index + 2];
                 velocities[index] = 0;
                 velocities[index + 1] = 0;
                 velocities[index + 2] = 0;
@@ -450,7 +419,7 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
         case 'KeyR':
             // Randomize positions
             for (let i = 0; i < particleCount * 3; i++) {
-                positions[i] = (Math.random() - 0.5) * 15;
+                positionsArray[i] = (Math.random() - 0.5) * 15;
                 velocities[i] = (Math.random() - 0.5) * 0.2;
             }
             event.preventDefault();
