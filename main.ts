@@ -1,6 +1,6 @@
 /**
  * Enhanced Interactive Particle System
- * Built by Ricky Segura - Enhanced Version
+ * Built by Ricky Segura - Enhanced Version (Bug Fixed)
  * for all creatives on Earth.
  * 
  * This code falls under MIT License.
@@ -18,16 +18,16 @@ interface SliderControl {
 }
 
 // Enhanced Global variables
-let G: number = 6.5; // Increased gravitational constant for more dynamic effects
-let escapeVelocity: number = 0.35; // Slightly higher threshold
-let maxDistance: number = 12; // Larger bounds
-let mouseInfluenceRadius: number = 6; // Larger influence area
-let waveAmplitude: number = 2.0; // New: Wave effect strength
-let colorCycleSpeed: number = 0.02; // New: Color animation speed
-let trailEffect: number = 0.95; // New: Trail/glow effect
-const damping: number = 0.985; // Slightly less damping for more fluid motion
+let G: number = 6.5;
+let escapeVelocity: number = 0.35;
+let maxDistance: number = 12;
+let mouseInfluenceRadius: number = 6;
+let waveAmplitude: number = 2.0;
+let colorCycleSpeed: number = 0.02;
+let trailEffect: number = 0.95;
+const damping: number = 0.985;
 const dt: number = 0.016;
-const particleCount: number = 15000; // More particles for richer visuals
+const particleCount: number = 15000;
 
 // Time tracking for animations
 let time: number = 0;
@@ -50,12 +50,12 @@ overlay.style.fontSize = '14px';
 overlay.style.fontWeight = '700';
 overlay.style.textShadow = '0 0 20px #00ff88, 0 0 40px #00ff88';
 overlay.style.letterSpacing = '1px';
-overlay.innerHTML = '◉ QUANTUM PARTICLE NEXUS ◉<br>Enhanced with ♦ THREE.JS<br>Built by <a href="https://www.rickysegura.dev/" target="_blank">Ricky Segura</a>';
+overlay.innerHTML = '◉ QUANTUM PARTICLE NEXUS ◉<br>Enhanced with ♦ THREE.JS<br>Built by <a href="https://www.rickysegura.dev/" target="_blank" style="color: #00ff88; text-decoration: none;">Ricky Segura</a>';
 document.body.appendChild(overlay);
 
 // Enhanced Three.js setup
 const scene: THREE.Scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a0a1a, 0.01); // Add atmospheric fog
+scene.fog = new THREE.FogExp2(0x0a0a1a, 0.01);
 
 const camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer: THREE.WebGLRenderer = new THREE.WebGLRenderer({ 
@@ -116,6 +116,9 @@ function createSlider(
     slider.style.borderRadius = '3px';
     slider.style.background = 'linear-gradient(90deg, #ff006e, #00ff88)';
     slider.style.outline = 'none';
+    
+    // Add webkit-specific styles for better cross-browser support
+    slider.style.setProperty('-webkit-appearance', 'none');
     slider.addEventListener('input', onChange);
     container.appendChild(slider);
     
@@ -173,7 +176,7 @@ const particles: THREE.BufferGeometry = new THREE.BufferGeometry();
 const positions: Float32Array = new Float32Array(particleCount * 3);
 const colors: Float32Array = new Float32Array(particleCount * 3);
 const velocities: Float32Array = new Float32Array(particleCount * 3);
-const originalPositions: Float32Array = new Float32Array(particleCount * 3); // Store original positions for wave effects
+const originalPositions: Float32Array = new Float32Array(particleCount * 3);
 
 // Create more interesting initial distribution
 for (let i = 0; i < particleCount; i++) {
@@ -237,6 +240,7 @@ function onMouseMove(event: MouseEvent): void {
 }
 
 function onTouchMove(event: TouchEvent): void {
+    event.preventDefault(); // Prevent scrolling on mobile
     if (event.touches.length > 0) {
         mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
@@ -245,11 +249,11 @@ function onTouchMove(event: TouchEvent): void {
 }
 
 window.addEventListener('mousemove', onMouseMove, false);
-window.addEventListener('touchmove', onTouchMove, false);
+window.addEventListener('touchmove', onTouchMove, { passive: false });
 
 // Add mouse click effects
 window.addEventListener('click', () => {
-    mouseInfluenceStrength = 3.0; // Boost influence on click
+    mouseInfluenceStrength = 3.0;
 });
 
 const raycaster: THREE.Raycaster = new THREE.Raycaster();
@@ -301,9 +305,9 @@ function animate(): void {
 
             // Enhanced color effects based on multiple factors
             const speed: number = Math.sqrt(
-                velocities[index]**2 + 
-                velocities[index+1]**2 + 
-                velocities[index+2]**2
+                velocities[index] * velocities[index] + 
+                velocities[index + 1] * velocities[index + 1] + 
+                velocities[index + 2] * velocities[index + 2]
             );
             
             // Multi-layered color system
@@ -314,13 +318,14 @@ function animate(): void {
             // Create dynamic color based on speed, distance, and time
             const baseColor = new THREE.Color().setHSL(
                 (timeHue + speedIntensity * 0.3) % 1,
-                0.8 + distanceIntensity * 0.2,
-                0.4 + speedIntensity * 0.6
+                Math.min(0.8 + distanceIntensity * 0.2, 1.0),
+                Math.min(0.4 + speedIntensity * 0.6, 1.0)
             );
             
-            colorsArray[index] = baseColor.r * (1 + speedIntensity);
-            colorsArray[index + 1] = baseColor.g * (1 + distanceIntensity);
-            colorsArray[index + 2] = baseColor.b * (1 + speedIntensity * distanceIntensity);
+            // Clamp color values to prevent overflow
+            colorsArray[index] = Math.min(baseColor.r * (1 + speedIntensity), 1.0);
+            colorsArray[index + 1] = Math.min(baseColor.g * (1 + distanceIntensity), 1.0);
+            colorsArray[index + 2] = Math.min(baseColor.b * (1 + speedIntensity * distanceIntensity), 1.0);
             
         } else {
             // Enhanced ambient behavior for particles outside influence
@@ -344,12 +349,16 @@ function animate(): void {
         const index = i * 3;
 
         // Apply velocity with enhanced integration
-        positionsArray[index] += velocities[index] * dt * 60; // Frame-rate independent
+        positionsArray[index] += velocities[index] * dt * 60;
         positionsArray[index + 1] += velocities[index + 1] * dt * 60;
         positionsArray[index + 2] += velocities[index + 2] * dt * 60;
 
         // Enhanced damping based on distance from center
-        const centerDist = Math.sqrt(positionsArray[index]**2 + positionsArray[index+1]**2 + positionsArray[index+2]**2);
+        const centerDist = Math.sqrt(
+            positionsArray[index] * positionsArray[index] + 
+            positionsArray[index + 1] * positionsArray[index + 1] + 
+            positionsArray[index + 2] * positionsArray[index + 2]
+        );
         const adaptiveDamping = damping + (1 - damping) * Math.min(centerDist / maxDistance, 0.5);
         
         velocities[index] *= adaptiveDamping;
@@ -418,9 +427,14 @@ window.addEventListener('keydown', (event: KeyboardEvent) => {
             break;
         case 'KeyR':
             // Randomize positions
-            for (let i = 0; i < particleCount * 3; i++) {
-                positionsArray[i] = (Math.random() - 0.5) * 15;
-                velocities[i] = (Math.random() - 0.5) * 0.2;
+            for (let i = 0; i < particleCount; i++) {
+                const index = i * 3;
+                positionsArray[index] = (Math.random() - 0.5) * 15;
+                positionsArray[index + 1] = (Math.random() - 0.5) * 15;
+                positionsArray[index + 2] = (Math.random() - 0.5) * 15;
+                velocities[index] = (Math.random() - 0.5) * 0.2;
+                velocities[index + 1] = (Math.random() - 0.5) * 0.2;
+                velocities[index + 2] = (Math.random() - 0.5) * 0.2;
             }
             event.preventDefault();
             break;
